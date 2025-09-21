@@ -1,0 +1,14 @@
+[workspace]
+members = ["programs/payout_plan"]
+
+[programs.localnet]
+payout_plan = "payout111111111111111111111111111111111111111"
+
+[programs.devnet]
+payout_plan = "payout111111111111111111111111111111111111111"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[scripts]
+test = "anchor test"
