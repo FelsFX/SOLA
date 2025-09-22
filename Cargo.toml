@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "programs/payout_plan"
+]
+resolver = "2"
+
+[workspace.dependencies]
+anchor-lang = "0.29.0"

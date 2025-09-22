@@ -1,0 +1,11 @@
+[package]
+name = "payout_plan"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "payout_plan"
+
+[dependencies]
+anchor-lang = { workspace = true }
