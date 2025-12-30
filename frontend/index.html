@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SOLA – wBTC/USDT Auszahlungsplan Demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #0f172a;
+        --card: #111827;
+        --muted: #9ca3af;
+        --accent: #38bdf8;
+        --text: #e5e7eb;
+        --border: #1f2937;
+        --error: #f87171;
+        --success: #4ade80;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at 20% 20%, #0b172a, #0a0f1f 40%, #070b16);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 32px 16px 64px;
+        display: flex;
+        justify-content: center;
+      }
+      .layout {
+        width: min(1200px, 100%);
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
+      .card {
+        background: rgba(17, 24, 39, 0.9);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0 0 12px;
+      }
+      p {
+        margin: 0 0 10px;
+        color: var(--muted);
+      }
+      label {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 6px;
+        color: var(--muted);
+      }
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        background: #0b1220;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        outline: none;
+        transition: border 120ms ease;
+      }
+      input:focus {
+        border-color: var(--accent);
+      }
+      .row {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        margin-bottom: 12px;
+      }
+      button {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--accent);
+        background: linear-gradient(135deg, #0ea5e9, #22d3ee);
+        color: #0b1220;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: filter 120ms ease, transform 120ms ease;
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--accent);
+      }
+      button:hover {
+        filter: brightness(1.06);
+        transform: translateY(-1px);
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.12);
+        color: var(--accent);
+        font-size: 13px;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        margin-right: 6px;
+      }
+      .log {
+        max-height: 320px;
+        overflow: auto;
+        background: #0b1220;
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 14px;
+        border: 1px solid var(--border);
+      }
+      .log-entry + .log-entry {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px dashed var(--border);
+      }
+      .log-entry time {
+        color: var(--muted);
+        font-size: 12px;
+        display: block;
+      }
+      .badge-success {
+        color: var(--success);
+      }
+      .badge-error {
+        color: var(--error);
+      }
+      .state {
+        display: grid;
+        gap: 8px;
+      }
+      .state div {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px dashed var(--border);
+        padding-bottom: 4px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="layout">
+      <section class="card" style="grid-column: span 2;">
+        <h1>SOLA: wBTC/USDT Auszahlungsplan (Demo-Frontend)</h1>
+        <p>
+          Diese rein lokale Demo spiegelt die Kernflüsse der Smart Contracts wider: Plan-Erstellung, Einzahlungen,
+          monatliche Auszahlungen, Notfallauszahlung, Inaktivitäts-Drain und Ausschüttung aus dem Community-Pool.
+          Werte werden nicht on-chain geschrieben, sondern lokal simuliert.
+        </p>
+        <div class="pill">CommunityPool</div>
+        <div class="pill">ParticipantPlan</div>
+      </section>
+
+      <section class="card">
+        <h2>Plan anlegen</h2>
+        <div class="row">
+          <div>
+            <label>Initial wBTC</label>
+            <input id="initialWbtc" type="number" min="0" step="0.0001" value="0.25" />
+          </div>
+          <div>
+            <label>Schwelle USDT</label>
+            <input id="thresholdUsdt" type="number" min="1" step="1" value="10000" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Monatliche Auszahlung USDT</label>
+            <input id="monthlyUsdt" type="number" min="1" step="1" value="500" />
+          </div>
+          <div>
+            <label>wBTC/USD Preis (Oracle)</label>
+            <input id="price" type="number" min="1" step="1000" value="65000" />
+          </div>
+        </div>
+        <button id="createPlan">Plan erstellen</button>
+        <p class="muted">Hinweis: Die Eligibility im Pool wechselt auf „true“ sobald die Schwelle noch nicht erreicht ist; beim Erreichen wird sie deaktiviert.</p>
+      </section>
+
+      <section class="card">
+        <h2>Aktionen</h2>
+        <div class="row">
+          <div>
+            <label>Zusätzliche Einzahlung (wBTC)</label>
+            <input id="contribWbtc" type="number" min="0" step="0.01" value="0.05" />
+            <button id="contribute">Einzahlen</button>
+          </div>
+          <div>
+            <label>Zeit seit letztem Payout (Tage)</label>
+            <input id="daysElapsed" type="number" min="0" step="1" value="30" />
+            <button id="payout">Monatliche Auszahlung</button>
+          </div>
+        </div>
+        <div class="row">
+          <button id="emergency" class="secondary">Notfallauszahlung (90/10)</button>
+          <button id="drain">Inaktivitäts-Drain (10%)</button>
+          <button id="distribute">Pool ausschütten</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Status</h2>
+        <div class="state" id="state"></div>
+      </section>
+
+      <section class="card" style="grid-column: span 2;">
+        <h2>Events</h2>
+        <div class="log" id="log"></div>
+      </section>
+    </main>
+
+    <script>
+      const state = {
+        planCreated: false,
+        thresholdUSDT: 0,
+        monthlyUSDT: 0,
+        price: 0,
+        wbtcBalance: 0,
+        pool: 0,
+        eligibility: false, // eligible for pool distribution (true if not in payout phase)
+        inPayoutPhase: false,
+        lastPayoutDays: 0,
+      };
+
+      const stateEl = document.getElementById("state");
+      const logEl = document.getElementById("log");
+
+      function usdToWbtc(usdt, price) {
+        return usdt / price;
+      }
+
+      function appendLog(message, badge) {
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+        const time = new Date().toLocaleTimeString();
+        entry.innerHTML = `<time>${time}</time><div>${badge ? `<span class="pill">${badge}</span>` : ""}${message}</div>`;
+        logEl.prepend(entry);
+      }
+
+      function render() {
+        stateEl.innerHTML = `
+          <div><span>Plan erstellt</span><strong>${state.planCreated ? "Ja" : "Nein"}</strong></div>
+          <div><span>In Payout-Phase</span><strong>${state.inPayoutPhase ? "Ja" : "Nein"}</strong></div>
+          <div><span>Eligibility im Pool</span><strong>${state.eligibility ? "Ja" : "Nein"}</strong></div>
+          <div><span>Plan-Guthaben (wBTC)</span><strong>${state.wbtcBalance.toFixed(6)}</strong></div>
+          <div><span>Community Pool (wBTC)</span><strong>${state.pool.toFixed(6)}</strong></div>
+          <div><span>Schwelle (USDT)</span><strong>${state.thresholdUSDT}</strong></div>
+          <div><span>Monats-Payout (USDT)</span><strong>${state.monthlyUSDT}</strong></div>
+          <div><span>wBTC/USD Preis</span><strong>${state.price}</strong></div>
+          <div><span>Tage seit letztem Payout</span><strong>${state.lastPayoutDays}</strong></div>
+        `;
+      }
+
+      function requirePlan() {
+        if (!state.planCreated) throw new Error("Plan ist noch nicht erstellt.");
+      }
+
+      document.getElementById("createPlan").onclick = () => {
+        const initial = Number(document.getElementById("initialWbtc").value);
+        const threshold = Number(document.getElementById("thresholdUsdt").value);
+        const monthly = Number(document.getElementById("monthlyUsdt").value);
+        const price = Number(document.getElementById("price").value);
+        if (initial <= 0 || threshold <= 0 || monthly <= 0 || price <= 0) {
+          appendLog("Ungültige Eingabe.", "Fehler");
+          return;
+        }
+        state.planCreated = true;
+        state.thresholdUSDT = threshold;
+        state.monthlyUSDT = monthly;
+        state.price = price;
+        state.wbtcBalance = initial;
+        state.pool = 0;
+        state.inPayoutPhase = usdToWbtc(threshold, price) <= initial;
+        state.eligibility = !state.inPayoutPhase;
+        state.lastPayoutDays = 0;
+        appendLog(
+          `Plan erstellt: initial ${initial} wBTC, Schwelle ${threshold} USDT, Monats-Payout ${monthly} USDT.`,
+          "Init"
+        );
+        render();
+      };
+
+      document.getElementById("contribute").onclick = () => {
+        try {
+          requirePlan();
+          const add = Number(document.getElementById("contribWbtc").value);
+          if (add <= 0) throw new Error("Betrag muss > 0 sein.");
+          state.wbtcBalance += add;
+          const thresholdWbtc = usdToWbtc(state.thresholdUSDT, state.price);
+          if (!state.inPayoutPhase && state.wbtcBalance >= thresholdWbtc) {
+            state.inPayoutPhase = true;
+            state.eligibility = false;
+          }
+          appendLog(`Einzahlung: +${add} wBTC. Neues Guthaben ${state.wbtcBalance.toFixed(6)} wBTC.`, "Deposit");
+          render();
+        } catch (e) {
+          appendLog(e.message, "Fehler");
+        }
+      };
+
+      document.getElementById("payout").onclick = () => {
+        try {
+          requirePlan();
+          const days = Number(document.getElementById("daysElapsed").value);
+          state.lastPayoutDays = days;
+          if (!state.inPayoutPhase) throw new Error("Schwelle nicht erreicht.");
+          if (days < 30) throw new Error("Mindestens 30 Tage seit letztem Payout erforderlich.");
+          let amount = usdToWbtc(state.monthlyUSDT, state.price);
+          if (amount > state.wbtcBalance) amount = state.wbtcBalance;
+          if (amount <= 0) throw new Error("Kein Guthaben vorhanden.");
+          state.wbtcBalance -= amount;
+          state.lastPayoutDays = 0;
+          appendLog(`Monatliche Auszahlung: ${amount.toFixed(6)} wBTC an Ersteller.`, "Payout");
+          if (state.wbtcBalance === 0) {
+            state.eligibility = false;
+            appendLog("Plan ist leer und gilt als geschlossen.", "Hinweis");
+          }
+          render();
+        } catch (e) {
+          appendLog(e.message, "Fehler");
+        }
+      };
+
+      document.getElementById("emergency").onclick = () => {
+        try {
+          requirePlan();
+          const bal = state.wbtcBalance;
+          if (bal <= 0) throw new Error("Kein Guthaben.");
+          const toCreator = bal * 0.9;
+          const toPool = bal - toCreator;
+          state.wbtcBalance = 0;
+          state.pool += toPool;
+          state.eligibility = false;
+          appendLog(
+            `Notfallauszahlung: ${toCreator.toFixed(6)} wBTC an Ersteller, ${toPool.toFixed(6)} wBTC in den Pool.`,
+            "Emergency"
+          );
+          render();
+        } catch (e) {
+          appendLog(e.message, "Fehler");
+        }
+      };
+
+      document.getElementById("drain").onclick = () => {
+        try {
+          requirePlan();
+          if (state.lastPayoutDays < 90) throw new Error("Inaktivität < 90 Tage.");
+          if (state.wbtcBalance <= 0) throw new Error("Kein Guthaben.");
+          const toPool = Math.max(state.wbtcBalance * 0.1, state.wbtcBalance < 0.000001 ? state.wbtcBalance : 0);
+          const drained = toPool > 0 ? toPool : state.wbtcBalance;
+          state.wbtcBalance -= drained;
+          state.pool += drained;
+          appendLog(`Inaktivitäts-Drain: ${drained.toFixed(6)} wBTC in den Pool.`, "Drain");
+          render();
+        } catch (e) {
+          appendLog(e.message, "Fehler");
+        }
+      };
+
+      document.getElementById("distribute").onclick = () => {
+        if (state.pool <= 0) {
+          appendLog("Pool ist leer.", "Fehler");
+          return;
+        }
+        const toProvider = state.pool * 0.01;
+        const toParticipants = state.pool * 0.98;
+        const retained = state.pool - toProvider - toParticipants;
+        appendLog(
+          `Pool-Ausschüttung: ${toProvider.toFixed(6)} wBTC Provider, ${toParticipants.toFixed(
+            6
+          )} wBTC an eligible Pläne, ${retained.toFixed(6)} wBTC verbleiben.`,
+          "Pool"
+        );
+        state.pool = retained;
+        render();
+      };
+
+      render();
+    </script>
+  </body>
+</html>
